@@ -112,18 +112,25 @@ require (
 	golang.org/x/tools v0.0.0-20170824195420-5d2fd3ccab98
 	gopkg.in/yaml.v2 v2.2.1 // indirect
 )
+
+replace (
+	github.com/BurntSushi/toml => my/toml/fork v0.3.0-with-fixes
+	github.com/bazelbuild/buildtools => my/buildtools/fork v0.0.0-20180226164855-abcdef12345
+)
 `,
 			want: `
 go_repository(
     name = "com_github_bazelbuild_buildtools",
-    commit = "80c7f0d45d7e",
+    commit = "abcdef12345",
     importpath = "github.com/bazelbuild/buildtools",
+    remote = "https://my/buildtools/fork",
 )
 
 go_repository(
     name = "com_github_burntsushi_toml",
     importpath = "github.com/BurntSushi/toml",
-    tag = "v0.3.0",
+    remote = "https://my/toml/fork",
+    tag = "v0.3.0-with-fixes",
 )
 
 go_repository(
@@ -199,14 +206,22 @@ func goListModulesStub(dir string) ([]byte, error) {
 	"Time": "2017-03-28T06:15:53Z",
 	"Indirect": true,
 	"Dir": "/usr/local/google/home/jayconrod/go/pkg/mod/github.com/!burnt!sushi/toml@v0.3.0",
-	"GoMod": "/usr/local/google/home/jayconrod/go/pkg/mod/cache/download/github.com/!burnt!sushi/toml/@v/v0.3.0.mod"
+	"GoMod": "/usr/local/google/home/jayconrod/go/pkg/mod/cache/download/github.com/!burnt!sushi/toml/@v/v0.3.0.mod",
+	"Replace": {
+		"Path": "my/toml/fork",
+		"Version": "v0.3.0-with-fixes"
+	}
 }
 {
 	"Path": "github.com/bazelbuild/buildtools",
 	"Version": "v0.0.0-20180226164855-80c7f0d45d7e",
 	"Time": "2018-02-26T16:48:55Z",
 	"Dir": "/usr/local/google/home/jayconrod/go/pkg/mod/github.com/bazelbuild/buildtools@v0.0.0-20180226164855-80c7f0d45d7e",
-	"GoMod": "/usr/local/google/home/jayconrod/go/pkg/mod/cache/download/github.com/bazelbuild/buildtools/@v/v0.0.0-20180226164855-80c7f0d45d7e.mod"
+	"GoMod": "/usr/local/google/home/jayconrod/go/pkg/mod/cache/download/github.com/bazelbuild/buildtools/@v/v0.0.0-20180226164855-80c7f0d45d7e.mod",
+	"Replace": {
+		"Path": "my/buildtools/fork",
+		"Version": "v0.0.0-20180226164855-abcdef12345"
+	}
 }
 {
 	"Path": "github.com/davecgh/go-spew",

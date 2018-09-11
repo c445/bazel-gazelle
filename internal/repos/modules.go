@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -33,6 +34,7 @@ import (
 type module struct {
 	Path, Version string
 	Main          bool
+	Replace       *module
 }
 
 func importRepoRulesModules(filename string) (repos []Repo, err error) {
@@ -57,21 +59,37 @@ func importRepoRulesModules(filename string) (repos []Repo, err error) {
 			continue
 		}
 
+		repo := label.ImportPathToBazelRepoName(mod.Path)
+
+		remote, version := "", mod.Version
+		if mod.Replace != nil {
+			hasPrefix := func(s string) bool { return strings.HasPrefix(mod.Replace.Path, s) }
+			if hasPrefix("/") || hasPrefix("./") || hasPrefix("../") {
+				log.Printf("gazelle: ignore path replacement %s => %s; add a local_repository rule with name=%q to your WORKSPACE", mod.Path, mod.Replace.Path, repo)
+				continue
+			}
+
+			// Populate version and remote of replacement.
+			remote = "https://" + mod.Replace.Path
+			version = mod.Replace.Version
+		}
+
 		var tag, commit string
-		if strings.HasPrefix(mod.Version, "v0.0.0-") {
-			if i := strings.LastIndex(mod.Version, "-"); i < 0 {
-				return nil, fmt.Errorf("failed to parse version for %s: %q", mod.Path, mod.Version)
+		if strings.HasPrefix(version, "v0.0.0-") {
+			if i := strings.LastIndex(version, "-"); i < 0 {
+				return nil, fmt.Errorf("failed to parse version for %s: %q", mod.Path, version)
 			} else {
-				commit = mod.Version[i+1:]
+				commit = version[i+1:]
 			}
 		} else {
-			tag = mod.Version
+			tag = version
 		}
 		repos = append(repos, Repo{
-			Name:     label.ImportPathToBazelRepoName(mod.Path),
+			Name:     repo,
 			GoPrefix: mod.Path,
 			Commit:   commit,
 			Tag:      tag,
+			Remote:   remote,
 		})
 	}
 
